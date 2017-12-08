@@ -3,7 +3,7 @@ package tasks_test
 import (
 	"testing"
 
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/Guazi-inc/machinery/v1/tasks"
 )
 
 func TestReflectValue(t *testing.T) {

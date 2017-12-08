@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/stretchr/testify/assert"
 )
 

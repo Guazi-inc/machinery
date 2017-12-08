@@ -1,7 +1,7 @@
 package backends
 
 import (
-	"github.com/RichardKnop/machinery/v1/config"
+	"github.com/Guazi-inc/machinery/v1/config"
 )
 
 // Backend represents a base backend structure

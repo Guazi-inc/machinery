@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/RichardKnop/machinery/example/tasks"
-	"github.com/RichardKnop/machinery/v1"
-	"github.com/RichardKnop/machinery/v1/config"
-	"github.com/RichardKnop/machinery/v1/log"
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/Guazi-inc/machinery/example/tasks"
+	"github.com/Guazi-inc/machinery/v1"
+	"github.com/Guazi-inc/machinery/v1/config"
+	"github.com/Guazi-inc/machinery/v1/log"
+	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/urfave/cli"
 )
 

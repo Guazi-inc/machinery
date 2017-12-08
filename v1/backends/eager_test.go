@@ -3,8 +3,8 @@ package backends_test
 import (
 	"testing"
 
-	"github.com/RichardKnop/machinery/v1/backends"
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/Guazi-inc/machinery/v1/backends"
+	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/stretchr/testify/suite"
 )
 

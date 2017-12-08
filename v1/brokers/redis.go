@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/RichardKnop/machinery/v1/common"
-	"github.com/RichardKnop/machinery/v1/config"
-	"github.com/RichardKnop/machinery/v1/log"
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/Guazi-inc/machinery/v1/common"
+	"github.com/Guazi-inc/machinery/v1/config"
+	"github.com/Guazi-inc/machinery/v1/log"
+	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/garyburd/redigo/redis"
 	redsync "gopkg.in/redsync.v1"
 )

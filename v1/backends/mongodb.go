@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/RichardKnop/machinery/v1/config"
-	"github.com/RichardKnop/machinery/v1/log"
-	"github.com/RichardKnop/machinery/v1/tasks"
+	"github.com/Guazi-inc/machinery/v1/config"
+	"github.com/Guazi-inc/machinery/v1/log"
+	"github.com/Guazi-inc/machinery/v1/tasks"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
