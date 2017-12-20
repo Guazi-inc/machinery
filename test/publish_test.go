@@ -26,12 +26,12 @@ func Test_publish(t *testing.T){
 		addTask0, addTask1, addTask2 tasks.Signature
 		multiplyTask0, multiplyTask1, panicTask tasks.Signature
 	)
-	eta0 := time.Now().UTC().Add(time.Second * 180)
-	eta1 := time.Now().UTC().Add(time.Second * 190)
-	eta2 := time.Now().UTC().Add(time.Second * 200)
-	eta3 := time.Now().UTC().Add(time.Second * 210)
-	eta4 := time.Now().UTC().Add(time.Second * 220)
-	eta5 := time.Now().UTC().Add(time.Second * 230)
+	eta0 := time.Now().UTC().Add(time.Second * 60)
+	eta1 := time.Now().UTC().Add(time.Second * 70)
+	eta2 := time.Now().UTC().Add(time.Second * 80)
+	eta3 := time.Now().UTC().Add(time.Second * 90)
+	eta4 := time.Now().UTC().Add(time.Second * 100)
+	eta5 := time.Now().UTC().Add(time.Second * 110)
 	var initTasks = func() {
 		addTask0 = tasks.Signature{
 			UUID: "zzl_add0",

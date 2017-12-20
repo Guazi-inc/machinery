@@ -67,6 +67,7 @@ func main() {
 }
 
 func loadConfig() (*config.Config, error) {
+	configPath = "/users/bruce/go/src/github.com/Guazi-inc/machinery/example/config.yml"
 	if configPath != "" {
 		return config.NewFromYaml(configPath, true)
 	}
@@ -123,9 +124,13 @@ func send() error {
 		longRunningTask              tasks.Signature
 	)
 
+	eta0 := time.Now().UTC().Add(time.Second * 60)
+	eta1 := time.Now().UTC().Add(time.Second * 70)
+	eta2 := time.Now().UTC().Add(time.Second * 80)
 	var initTasks = func() {
 		addTask0 = tasks.Signature{
 			Name: "add",
+			ETA : &eta0,
 			Args: []tasks.Arg{
 				{
 					Type:  "int64",
@@ -140,6 +145,7 @@ func send() error {
 
 		addTask1 = tasks.Signature{
 			Name: "add",
+			ETA : &eta1,
 			Args: []tasks.Arg{
 				{
 					Type:  "int64",
@@ -154,6 +160,7 @@ func send() error {
 
 		addTask2 = tasks.Signature{
 			Name: "add",
+			ETA : &eta2,
 			Args: []tasks.Arg{
 				{
 					Type:  "int64",
