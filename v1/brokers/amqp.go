@@ -310,3 +310,7 @@ func (b *AMQPBroker)TransferDelayTasks() (err error){
 func (b * AMQPBroker) GetConn()(conn redis.Conn){
 	return
 }
+
+func (b *AMQPBroker) GetDelayedTasksNumber()(task_number int, err error) {
+	return
+}

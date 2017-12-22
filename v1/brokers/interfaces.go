@@ -15,6 +15,7 @@ type Interface interface {
 	GetPendingTasks(queue string) ([]*tasks.Signature, error)
 	TransferDelayTasks() (err error)
 	GetConn()(conn redis.Conn)
+	GetDelayedTasksNumber()(task_number int, err error)
 }
 
 // TaskProcessor - can process a delivered task

@@ -8,10 +8,10 @@ import (
 	"github.com/Guazi-inc/machinery/v1/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/garyburd/redigo/redis"
-	"time"
 )
 
 var redisDelayedTasksKey = "_delayed_tasks"
+var redisDelayedTasksDetail = "_detail"
 
 func Test_TransferDelayTasks(t *testing.T) {
 	configPath := "/users/bruce/go/src/github.com/Guazi-inc/machinery/example/config.yml"
@@ -37,46 +37,42 @@ func Test_TransferDelayTasks(t *testing.T) {
 
 	b := server.GetBroker()
 	conn := b.GetConn()
+	defer conn.Close()
 
-	reply1, err := conn.Do("zcard", cnf.DefaultQueue + redisDelayedTasksKey)
+	task_number1, err := b.GetDelayedTasksNumber()
 	if err != nil {
-		fmt.Errorf("get task number error: %s", err.Error())
-	}
-	task_number1, err1 := reply1.(int)
-	if !err1 {
-		fmt.Errorf("task number type error: %s", reply1)
+		return
 	}
 
-	now := time.Now().UTC().UnixNano()
-	msg1 := make([][]byte, task_number1)
-	msg1, _ = redis.ByteSlices(conn.Do(
-		"ZRANGEBYSCORE", cnf.DefaultQueue + redisDelayedTasksKey, 0, now, "LIMIT", 0,  task_number1,))
+	reply, err := conn.Do(
+		"ZRANGEBYSCORE", cnf.DefaultQueue + redisDelayedTasksKey, 0, "+inf")
+	msg1, err := redis.ByteSlices(reply, err)
 
 	b.TransferDelayTasks()
 
-	reply2, err := conn.Do("zcard", cnf.DefaultQueue + redisDelayedTasksKey)
+	task_number2, err := b.GetDelayedTasksNumber()
 	if err != nil {
-		fmt.Errorf("get task number error: %s", err.Error())
+		return
 	}
-	task_number2, err2 := reply2.(int)
-	if !err2 {
-		fmt.Errorf("task number type error: %s", reply1)
-	}
-
-	msg2 := make([][]byte, task_number1)
+	msg2 := make([]string, task_number2)
 	msg2_uuid, _ := redis.ByteSlices(conn.Do(
-		"ZRANGEBYSCORE", cnf.DefaultQueue + redisDelayedTasksKey, 0, now, "LIMIT", 0,  task_number2,))
+		"ZRANGEBYSCORE", cnf.DefaultQueue + redisDelayedTasksKey, 0, "+inf"))
 	for i := range msg2_uuid {
-		msg2_sig, _ := redis.ByteSlices(conn.Do("get", msg2_uuid[i]))
-		assert.Equal(t, len(msg2_sig), 1, "actual lenght for %s is %d", msg2_uuid[i], len(msg2_sig))
-		msg2[i] = msg2_sig[0]
+		msg2_sig, err := redis.String(conn.Do("get", string(msg2_uuid[i]) + redisDelayedTasksDetail))
+		if err != nil {
+			return
+		}
+		if msg2_sig == "" {
+			return
+		}
+		msg2[i] = msg2_sig
 	}
 
 	assert.True(t, task_number1 == task_number2, "task number [%d] after transfering is different from " +
 		"one [%d] before transfering.", task_number1, task_number2)
 	for i := 0; i < task_number1; i++ {
 		assert.Equal(t, string(msg1[i]), string(msg2[i]), "signature %s before transfer is different from" +
-			"signature %s after transfer", string(msg1[i]), string(msg2[i]))
+			"signature %s after transfer", string(msg1[i]), msg2[i])
 	}
 
 }

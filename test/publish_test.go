@@ -24,14 +24,13 @@ func Test_publish(t *testing.T){
 
 	var (
 		addTask0, addTask1, addTask2 tasks.Signature
-		multiplyTask0, multiplyTask1, panicTask tasks.Signature
+		multiplyTask0, multiplyTask1 tasks.Signature
 	)
-	eta0 := time.Now().UTC().Add(time.Second * 60)
-	eta1 := time.Now().UTC().Add(time.Second * 70)
-	eta2 := time.Now().UTC().Add(time.Second * 80)
-	eta3 := time.Now().UTC().Add(time.Second * 90)
-	eta4 := time.Now().UTC().Add(time.Second * 100)
-	eta5 := time.Now().UTC().Add(time.Second * 110)
+	eta0 := time.Now().UTC().Add(time.Second * 120)
+	eta1 := time.Now().UTC().Add(time.Second * 130)
+	eta2 := time.Now().UTC().Add(time.Second * 140)
+	eta3 := time.Now().UTC().Add(time.Second * 150)
+	eta4 := time.Now().UTC().Add(time.Second * 160)
 	var initTasks = func() {
 		addTask0 = tasks.Signature{
 			UUID: "zzl_add0",
@@ -96,12 +95,6 @@ func Test_publish(t *testing.T){
 			ETA:  &eta4,
 
 		}
-
-		panicTask = tasks.Signature{
-			Name: "panic_task",
-			ETA:  &eta5,
-
-		}
 	}
 	initTasks()
 	log.INFO.Println("Single task:")
@@ -110,7 +103,6 @@ func Test_publish(t *testing.T){
 	_, err = server.SendTask(&addTask2)
 	_, err = server.SendTask(&multiplyTask0)
 	_, err = server.SendTask(&multiplyTask1)
-	_, err = server.SendTask(&panicTask)
 	if err != nil {
 		fmt.Errorf("send tasks error: %s", err.Error())
 	}

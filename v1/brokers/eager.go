@@ -75,3 +75,7 @@ func (eagerBroker *EagerBroker) TransferDelayTasks() (err error){
 func (eagerBroker *EagerBroker) GetConn()(conn redis.Conn){
 	return
 }
+
+func (eagerBroker *EagerBroker) GetDelayedTasksNumber()(task_number int, err error){
+	return
+}
