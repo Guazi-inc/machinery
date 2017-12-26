@@ -12,6 +12,7 @@ import (
 	"github.com/Guazi-inc/machinery/v1/log"
 	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/streadway/amqp"
+	"github.com/garyburd/redigo/redis"
 )
 
 // AMQPBroker represents an AMQP broker
@@ -300,4 +301,16 @@ func (b *AMQPBroker) delay(signature *tasks.Signature, delayMs int64) error {
 	}
 
 	return nil
+}
+
+func (b *AMQPBroker)TransferDelayTasks() (err error){
+	return
+}
+
+func (b * AMQPBroker) GetConn()(conn redis.Conn){
+	return
+}
+
+func (b *AMQPBroker) GetDelayedTasksNumber()(task_number int, err error) {
+	return
 }

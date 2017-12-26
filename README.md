@@ -476,6 +476,16 @@ eta := time.Now().UTC().Add(time.Second * 5)
 signature.ETA = &eta
 ```
 
+#### Transfer Delayed Tasks
+
+You can transfer delayed tasks to suit updated code in which ETA of tasks can be modified.
+
+```go
+//transfer delay tasks to suit updated code in which ETA of tasks can be modified
+server.GetBroker().TransferDelayTasks() 
+```
+> Currently only supported by Redis broker.
+
 #### Retry Tasks
 
 You can set a number of retry attempts before declaring task as failed. Fibonacci sequence will be used to space out retry requests over time.

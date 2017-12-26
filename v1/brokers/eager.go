@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Guazi-inc/machinery/v1/tasks"
+	"github.com/garyburd/redigo/redis"
 )
 
 // EagerBroker represents an "eager" in-memory broker
@@ -65,4 +66,16 @@ func (eagerBroker *EagerBroker) GetPendingTasks(queue string) ([]*tasks.Signatur
 // AssignWorker assigns a worker to the eager broker
 func (eagerBroker *EagerBroker) AssignWorker(w TaskProcessor) {
 	eagerBroker.worker = w
+}
+
+func (eagerBroker *EagerBroker) TransferDelayTasks() (err error){
+	return
+}
+
+func (eagerBroker *EagerBroker) GetConn()(conn redis.Conn){
+	return
+}
+
+func (eagerBroker *EagerBroker) GetDelayedTasksNumber()(task_number int, err error){
+	return
 }

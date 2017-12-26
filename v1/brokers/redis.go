@@ -15,6 +15,7 @@ import (
 )
 
 var redisDelayedTasksKey = "_delayed_tasks"
+var redisDelayedTasksDetail = "_detail"
 
 // RedisBroker represents a Redis broker
 type RedisBroker struct {
@@ -162,7 +163,14 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 
 		if signature.ETA.After(now) {
 			score := signature.ETA.UnixNano()
-			_, err = conn.Do("ZADD", b.cnf.DefaultQueue+redisDelayedTasksKey, score, msg)
+			//_, err = conn.Do("ZADD", b.cnf.DefaultQueue+redisDelayedTasksKey, score, msg)
+
+			conn.Send("SET", signature.UUID + redisDelayedTasksDetail, msg)
+			conn.Send("ZADD", b.cnf.DefaultQueue + redisDelayedTasksKey, score, signature.UUID)
+			conn.Flush()
+			if _, err = conn.Receive(); err != nil {
+				return err
+			}
 			return err
 		}
 	}
@@ -304,30 +312,19 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 
 	var (
 		items [][]byte
+		msg_byte [][]byte
 		reply interface{}
+	    msg_delay interface{}
 	)
 
 	for {
 		// Space out queries to ZSET to 20ms intervals so we don't bombard redis
 		// server with relentless ZRANGEBYSCOREs
 		<-time.After(20 * time.Millisecond)
-
-		if _, err = conn.Do("WATCH", key); err != nil {
-			return
-		}
-
 		now := time.Now().UTC().UnixNano()
 
 		// https://redis.io/commands/zrangebyscore
-		items, err = redis.ByteSlices(conn.Do(
-			"ZRANGEBYSCORE",
-			key,
-			0,
-			now,
-			"LIMIT",
-			0,
-			1,
-		))
+		items, err = redis.ByteSlices(conn.Do("ZRANGEBYSCORE", key, 0, now, "LIMIT", 0, 1,))
 		if err != nil {
 			return
 		}
@@ -336,15 +333,30 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 			return
 		}
 
-		conn.Send("MULTI")
+		if msg_delay, err = conn.Do("GET", string(items[0]) + redisDelayedTasksDetail); err != nil {
+			return
+		}
+		if msg_delay == nil {
+			err = fmt.Errorf("signature message for %s is nil: %s", string(items[0]))
+			return
+		}
+
+		msg_delay_slice := make([]interface{}, 1)
+		msg_delay_slice[0] = msg_delay
+
+		if msg_byte, err = redis.ByteSlices(msg_delay_slice, err); err != nil {
+			return
+		}
+
 		conn.Send("ZREM", key, items[0])
-		reply, err = conn.Do("EXEC")
-		if err != nil {
+		conn.Send("DEL", string(items[0]) + redisDelayedTasksDetail)
+		conn.Flush()
+		if reply, err = conn.Receive(); err != nil {
 			return
 		}
 
 		if reply != nil {
-			result = items[0]
+			result = msg_byte[0]
 			break
 		}
 	}
@@ -362,4 +374,87 @@ func (b *RedisBroker) open() redis.Conn {
 		b.redsync = redsync.New(pools)
 	}
 	return b.pool.Get()
+}
+
+//transfer delay tasks to suit updated code in which ETA of tasks can be modified
+func (b *RedisBroker) TransferDelayTasks() (err error) {
+	conn := b.open()
+	defer conn.Close()
+
+	defer func() {
+		// Return connection to normal state on error.
+		// https://redis.io/commands/discard
+		if err != nil {
+			conn.Do("DISCARD")
+		}
+	}()
+
+	var (
+		results [][]byte
+		reply interface{}
+	)
+
+	for {
+		// Space out queries to ZSET to 20ms intervals so we don't bombard redis
+		// server with relentless ZRANGEBYSCOREs
+		<-time.After(20 * time.Millisecond)
+
+		if _, err = conn.Do("WATCH", b.cnf.DefaultQueue+redisDelayedTasksKey); err != nil {
+			return
+		}
+
+		// https://redis.io/commands/zrangebyscore
+		results, err = redis.ByteSlices(conn.Do(
+			"ZRANGEBYSCORE", b.cnf.DefaultQueue+redisDelayedTasksKey,	0, "+inf",
+		))
+		if err != nil {
+			return
+		}
+
+		conn.Send("MULTI")
+		for i := range results {
+			sig := new(tasks.Signature)
+			if err = json.Unmarshal(results[i], sig); err != nil {
+				return
+			}
+			score := sig.ETA.UnixNano()
+			conn.Send("ZREM", b.cnf.DefaultQueue+redisDelayedTasksKey, results[i])
+			if err = conn.Send("SET", sig.UUID + redisDelayedTasksDetail, results[i]); err != nil {
+				return
+			}
+			if err = conn.Send("ZADD", b.cnf.DefaultQueue+redisDelayedTasksKey, score, sig.UUID); err != nil {
+				return
+			}
+		}
+
+		if reply, err = conn.Do("EXEC"); err != nil {
+			return
+		}
+		if reply != nil {
+			break
+		}
+	}
+	return
+}
+
+//get connection to redis for unit test
+func (b *RedisBroker) GetConn()(conn redis.Conn){
+	conn = b.open()
+	return
+}
+
+func (b *RedisBroker) GetDelayedTasksNumber()(task_number int, err error){
+	conn := b.open()
+	defer conn.Close()
+
+	var reply interface{}
+	if reply, err = conn.Do("zcard", b.cnf.DefaultQueue+redisDelayedTasksKey); err != nil {
+		return
+	}
+
+	if task_number, err = redis.Int(reply, err); err != nil {
+		return
+	}
+
+	return
 }
