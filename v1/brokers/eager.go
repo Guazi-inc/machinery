@@ -68,7 +68,7 @@ func (eagerBroker *EagerBroker) AssignWorker(w TaskProcessor) {
 	eagerBroker.worker = w
 }
 
-func (eagerBroker *EagerBroker) TransferDelayTasks() (err error){
+func (eagerBroker *EagerBroker) TransferDelayTasks(newQueueName string) (err error){
 	return
 }
 
