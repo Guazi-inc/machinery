@@ -379,65 +379,64 @@ func (b *RedisBroker) open() redis.Conn {
 }
 
 //transfer delay tasks to suit updated code in which ETA of tasks can be modified
-func (b *RedisBroker) TransferDelayTasks(newQueueName string) (err error) {
+func (b *RedisBroker) TransferDelayTasks(newQueueName string) (errRet error) {
 	if newQueueName == "" {
 		newQueueName = b.cnf.DefaultQueue
 	}
 	conn := b.open()
-	defer conn.Close()
 	defer func() {
 		// Return connection to normal state on error.
 		// https://redis.io/commands/discard
-		if err != nil {
+		if errRet != nil {
+			log.ERROR.Println(errRet)
 			conn.Do("DISCARD")
 		}
+		conn.Close()
 	}()
-
-	var (
-		results [][]byte
-		reply   interface{}
-	)
 
 	for {
 		// Space out queries to ZSET to 20ms intervals so we don't bombard redis
 		// server with relentless ZRANGEBYSCOREs
 		<-time.After(20 * time.Millisecond)
 
-		if _, err = conn.Do("WATCH", b.cnf.DefaultQueue); err != nil {
-			return
+		if _, err := conn.Do("WATCH", b.cnf.DefaultQueue); err != nil {
+			return err
 		}
 
 		// https://redis.io/commands/zrangebyscore
-		results, err = redis.ByteSlices(conn.Do(
+		results, err := redis.ByteSlices(conn.Do(
 			"ZRANGEBYSCORE", b.cnf.DefaultQueue, 0, "+inf",
 		))
 		if err != nil {
-			return
+			return err
 		}
+		log.INFO.Printf("[TransferDelayTasks] %d results", len(results))
 
 		conn.Send("MULTI")
 		for i := range results {
 			sig := new(tasks.Signature)
-			if err = json.Unmarshal(results[i], sig); err != nil {
-				return
+			if err := json.Unmarshal(results[i], sig); err != nil {
+				return err
 			}
+			log.INFO.Printf("[%d] %+v", i, sig)
 			score := sig.ETA.UnixNano()
 			if err = conn.Send("SET", sig.UUID+redisDelayedTaskDetailSuffix, results[i]); err != nil {
-				return
+				return err
 			}
 			if err = conn.Send("ZADD", newQueueName, score, sig.UUID); err != nil {
-				return
+				return err
 			}
 		}
 
-		if reply, err = conn.Do("EXEC"); err != nil {
-			return
+		reply, err := conn.Do("EXEC")
+		if err != nil {
+			return err
 		}
 		if reply != nil {
 			break
 		}
 	}
-	return
+	return nil
 }
 
 //get connection to redis for unit test
