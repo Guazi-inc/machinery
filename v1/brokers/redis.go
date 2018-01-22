@@ -422,7 +422,6 @@ func (b *RedisBroker) TransferDelayTasks(newQueueName string) (err error) {
 				return
 			}
 			score := sig.ETA.UnixNano()
-			conn.Send("ZREM", b.cnf.DefaultQueue, results[i])
 			if err = conn.Send("SET", sig.UUID+redisDelayedTaskDetailSuffix, results[i]); err != nil {
 				return
 			}
