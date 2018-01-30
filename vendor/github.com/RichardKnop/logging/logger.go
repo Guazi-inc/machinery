@@ -10,8 +10,10 @@ import (
 type level int
 
 const (
+	// DEBUG level
+	DEBUG level = iota
 	// INFO level
-	INFO level = iota
+	INFO
 	// WARNING level
 	WARNING
 	// ERROR level
@@ -24,6 +26,7 @@ const (
 
 // Log level prefix map
 var prefix = map[level]string{
+	DEBUG:    "DEBUG: ",
 	INFO:    "INFO: ",
 	WARNING: "WARNING: ",
 	ERROR:   "ERROR: ",

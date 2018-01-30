@@ -8,6 +8,7 @@ import (
 	"github.com/Guazi-inc/machinery/v1/backends"
 	"github.com/Guazi-inc/machinery/v1/brokers"
 	"github.com/Guazi-inc/machinery/v1/config"
+	"github.com/Guazi-inc/machinery/v1/log"
 	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/satori/go.uuid"
 )
@@ -89,10 +90,11 @@ func (server *Server) SetConfig(cnf *config.Config) {
 
 // RegisterTasks registers all tasks at once
 func (server *Server) RegisterTasks(namedTaskFuncs map[string]interface{}) error {
-	for _, task := range namedTaskFuncs {
+	for name, task := range namedTaskFuncs {
 		if err := tasks.ValidateTask(task); err != nil {
 			return err
 		}
+		log.DEBUG.Printf("registered task: %s", name)
 	}
 	server.registeredTasks = namedTaskFuncs
 	server.broker.SetRegisteredTaskNames(server.GetRegisteredTaskNames())
