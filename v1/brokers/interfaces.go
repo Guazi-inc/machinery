@@ -5,6 +5,21 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
+const (
+	RecordTypePublish RecordType = 0
+	RecordTypeProcess RecordType = 1
+)
+
+var saveRecordFuncs []SaveRecordFunc
+
+type RecordType int32
+
+type SaveRecordFunc func(queueName string, recordType RecordType, signare *tasks.Signature)
+
+func SetSaveRecordFunc(funcs ...SaveRecordFunc) {
+	saveRecordFuncs = append(saveRecordFuncs, funcs...)
+}
+
 // Interface - a common interface for all brokers
 type Interface interface {
 	SetRegisteredTaskNames(names []string)

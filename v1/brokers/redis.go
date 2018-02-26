@@ -174,12 +174,22 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 			if _, err = conn.Receive(); err != nil {
 				return err
 			}
+		}
+	} else {
+		if _, err = conn.Do("RPUSH", signature.RoutingKey, msg); err != nil {
 			return err
 		}
+
 	}
 
-	_, err = conn.Do("RPUSH", signature.RoutingKey, msg)
-	return err
+	b.SaveRecord(RecordTypePublish, signature)
+	return nil
+}
+
+func (b *RedisBroker) SaveRecord(recordType RecordType, signare *tasks.Signature) {
+	for _, f := range saveRecordFuncs {
+		f(b.cnf.DefaultQueue, recordType, signare)
+	}
 }
 
 // GetPendingTasks returns a slice of task signatures waiting in the queue
@@ -275,7 +285,11 @@ func (b *RedisBroker) consumeOne(delivery []byte, taskProcessor TaskProcessor) e
 
 	log.INFO.Printf("Received new message: %s", delivery)
 
-	return taskProcessor.Process(sig)
+	if err := taskProcessor.Process(sig); err != nil {
+		return err
+	}
+	b.SaveRecord(RecordTypeProcess, sig)
+	return nil
 }
 
 // nextTask pops next available task from the default queue
@@ -302,6 +316,7 @@ func (b *RedisBroker) nextTask(queue string) (result []byte, err error) {
 // nextDelayedTask pops a value from the ZSET key using WATCH/MULTI/EXEC commands.
 // https://github.com/garyburd/redigo/blob/master/redis/zpop_example_test.go
 func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
+
 	conn := b.open()
 	defer conn.Close()
 
