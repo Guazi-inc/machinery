@@ -2,6 +2,7 @@ package brokers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/Guazi-inc/machinery/v1/log"
 	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/garyburd/redigo/redis"
-	"github.com/go-errors/errors"
 	redsync "gopkg.in/redsync.v1"
 )
 
