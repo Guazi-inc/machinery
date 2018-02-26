@@ -11,6 +11,7 @@ import (
 	"github.com/Guazi-inc/machinery/v1/log"
 	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/garyburd/redigo/redis"
+	"github.com/go-errors/errors"
 	redsync "gopkg.in/redsync.v1"
 )
 
@@ -350,10 +351,17 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 			return
 		}
 
+		conn.Send("MULTI")
 		conn.Send("ZREM", key, items[0])
 		conn.Send("DEL", string(items[0])+redisDelayedTaskDetailSuffix)
-		conn.Flush()
-		if reply, err = conn.Receive(); err != nil {
+		if reply, err = conn.Do("EXEC"); err != nil {
+			return
+		}
+
+		//删除失败，可能已经被消费
+		if reply.([]interface{})[0] == int64(0) {
+			log.INFO.Printf("delayed task: %s, may already consumed", items[0])
+			err = errors.New(fmt.Sprintf("delayed task: %s, may already consumed", items[0]))
 			return
 		}
 
