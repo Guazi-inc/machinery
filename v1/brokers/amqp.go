@@ -303,20 +303,20 @@ func (b *AMQPBroker) delay(signature *tasks.Signature, delayMs int64) error {
 	return nil
 }
 
-func (b *AMQPBroker) TransferDelayTasks(newQueueName string) (err error) {
-	return
+func (b *AMQPBroker) TransferDelayTasks(_, _ string) (error) {
+	return nil
 }
 
-func (b *AMQPBroker) GetConn() (conn redis.Conn) {
-	return
+func (b *AMQPBroker) GetConn() (redis.Conn) {
+	return nil
 }
 
-func (b *AMQPBroker) CountDelayedTasks() (task_number int, err error) {
-	return
+func (b *AMQPBroker) CountDelayedTasks() (int, error) {
+	return 0, nil
 }
 
-func (b *AMQPBroker) CountPendingTasks() (task_number int, err error) {
-	return
+func (b *AMQPBroker) CountPendingTasks() (int, error) {
+	return 0, nil
 }
 
 func (b *AMQPBroker) GetDelayedTasks(_ int, _ int) ([]*tasks.Signature, error) {

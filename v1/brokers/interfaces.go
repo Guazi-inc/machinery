@@ -27,7 +27,6 @@ type Interface interface {
 	StartConsuming(consumerTag string, concurrency int, p TaskProcessor) (bool, error)
 	StopConsuming()
 	Publish(task *tasks.Signature) error
-	TransferDelayTasks(newQueueName string) (err error)
 	GetConn() (conn redis.Conn)
 
 	CountPendingTasks() (task_number int, err error)

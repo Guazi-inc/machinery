@@ -58,6 +58,11 @@ func (eagerBroker *EagerBroker) Publish(task *tasks.Signature) error {
 	return eagerBroker.worker.Process(signature)
 }
 
+// AssignWorker assigns a worker to the eager broker
+func (eagerBroker *EagerBroker) AssignWorker(w TaskProcessor) {
+	eagerBroker.worker = w
+}
+
 // GetPendingTasks returns a slice of task.Signatures waiting in the queue
 func (eagerBroker *EagerBroker) GetPendingTasks(_ int, _ int) ([]*tasks.Signature, error) {
 	return []*tasks.Signature{}, errors.New("Not implemented")
@@ -68,23 +73,18 @@ func (eagerBroker *EagerBroker) GetDelayedTasks(_ int, _ int) ([]*tasks.Signatur
 	return nil, nil
 }
 
-// AssignWorker assigns a worker to the eager broker
-func (eagerBroker *EagerBroker) AssignWorker(w TaskProcessor) {
-	eagerBroker.worker = w
+func (eagerBroker *EagerBroker) TransferDelayTasks(_, _ string) (error){
+	return nil
 }
 
-func (eagerBroker *EagerBroker) TransferDelayTasks(newQueueName string) (err error){
-	return
+func (eagerBroker *EagerBroker) GetConn()(redis.Conn){
+	return nil
 }
 
-func (eagerBroker *EagerBroker) GetConn()(conn redis.Conn){
-	return
+func (eagerBroker *EagerBroker) CountDelayedTasks()(int, error){
+	return 0, nil
 }
 
-func (eagerBroker *EagerBroker) CountDelayedTasks()(task_number int, err error){
-	return
-}
-
-func (eagerBroker *EagerBroker) CountPendingTasks()(task_number int, err error){
-	return
+func (eagerBroker *EagerBroker) CountPendingTasks()(int, error){
+	return 0, nil
 }
