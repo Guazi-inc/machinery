@@ -176,8 +176,8 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 			score := signature.ETA.UnixNano()
 			//_, err = conn.Do("ZADD", b.cnf.DefaultQueue+redisDelayedQueueSuffix, score, msg)
 
-			conn.Send("SET", WithDetailSuffix(signature.UUID), msg)
-			//conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), signature.UUID, msg)
+			//conn.Send("SET", WithDetailSuffix(signature.UUID), msg)
+			conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), signature.UUID, msg)
 			conn.Send("ZADD", WithDelaySuffix(b.cnf.DefaultQueue), score, signature.UUID)
 			conn.Flush()
 			if _, err = conn.Receive(); err != nil {
@@ -250,8 +250,8 @@ func (b *RedisBroker) GetDelayedTasks(indexStart, indexEnd int) ([]*tasks.Signat
 	taskSignatures := make([]*tasks.Signature, len(results))
 	for i, result := range results {
 		sig := new(tasks.Signature)
-		bytes, err = conn.Do("GET", WithDetailSuffix(string(result)))
-		//bytes, err = conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), string(result))
+		//bytes, err = conn.Do("GET", WithDetailSuffix(string(result)))
+		bytes, err = conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), string(result))
 		if err != nil {
 			return nil, err
 		}
@@ -398,8 +398,8 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 			return
 		}
 
-		if msg_delay, err = conn.Do("GET", WithDetailSuffix(string(items[0]))); err != nil {
-		//if msg_delay, err = conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), string(items[0])); err != nil {
+		//if msg_delay, err = conn.Do("GET", WithDetailSuffix(string(items[0]))); err != nil {
+		if msg_delay, err = conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), string(items[0])); err != nil {
 			return
 		}
 		if msg_delay == nil {
@@ -416,8 +416,8 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 
 		conn.Send("MULTI")
 		conn.Send("ZREM", key, items[0])
-		conn.Send("DEL", WithDetailSuffix(string(items[0])))
-		//conn.Send("HDEL", WithDetailSuffix(b.cnf.DefaultQueue), string(items[0]))
+		//conn.Send("DEL", WithDetailSuffix(string(items[0])))
+		conn.Send("HDEL", WithDetailSuffix(b.cnf.DefaultQueue), string(items[0]))
 		if reply, err = conn.Do("EXEC"); err != nil {
 			return
 		}
@@ -490,8 +490,8 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string) (errRet error) {
 			}
 			log.INFO.Printf("[%d] %+v", i, sig)
 			score := sig.ETA.UnixNano()
-			if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
-			//if err = conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), sig.UUID, results[i]); err != nil {
+			//if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
+			if err = conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), sig.UUID, results[i]); err != nil {
 				return err
 			}
 			if err = conn.Send("ZADD", newQueue, score, sig.UUID); err != nil {
