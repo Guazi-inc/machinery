@@ -59,8 +59,13 @@ func (eagerBroker *EagerBroker) Publish(task *tasks.Signature) error {
 }
 
 // GetPendingTasks returns a slice of task.Signatures waiting in the queue
-func (eagerBroker *EagerBroker) GetPendingTasks(queue string) ([]*tasks.Signature, error) {
+func (eagerBroker *EagerBroker) GetPendingTasks(_ int, _ int) ([]*tasks.Signature, error) {
 	return []*tasks.Signature{}, errors.New("Not implemented")
+}
+
+// GetPendingTasks returns a slice of task.Signatures waiting in the queue
+func (eagerBroker *EagerBroker) GetDelayedTasks(_ int, _ int) ([]*tasks.Signature, error) {
+	return nil, nil
 }
 
 // AssignWorker assigns a worker to the eager broker
@@ -76,6 +81,10 @@ func (eagerBroker *EagerBroker) GetConn()(conn redis.Conn){
 	return
 }
 
-func (eagerBroker *EagerBroker) GetDelayedTasksNumber()(task_number int, err error){
+func (eagerBroker *EagerBroker) CountDelayedTasks()(task_number int, err error){
+	return
+}
+
+func (eagerBroker *EagerBroker) CountPendingTasks()(task_number int, err error){
 	return
 }

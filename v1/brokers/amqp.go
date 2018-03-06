@@ -311,6 +311,19 @@ func (b *AMQPBroker) GetConn() (conn redis.Conn) {
 	return
 }
 
-func (b *AMQPBroker) GetDelayedTasksNumber() (task_number int, err error) {
+func (b *AMQPBroker) CountDelayedTasks() (task_number int, err error) {
 	return
 }
+
+func (b *AMQPBroker) CountPendingTasks() (task_number int, err error) {
+	return
+}
+
+func (b *AMQPBroker) GetDelayedTasks(_ int, _ int) ([]*tasks.Signature, error) {
+	return nil,nil
+}
+
+func (b *AMQPBroker) GetPendingTasks(_ int, _ int) ([]*tasks.Signature, error) {
+	return nil,nil
+}
+

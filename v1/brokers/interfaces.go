@@ -27,10 +27,13 @@ type Interface interface {
 	StartConsuming(consumerTag string, concurrency int, p TaskProcessor) (bool, error)
 	StopConsuming()
 	Publish(task *tasks.Signature) error
-	GetPendingTasks(queue string) ([]*tasks.Signature, error)
 	TransferDelayTasks(newQueueName string) (err error)
 	GetConn() (conn redis.Conn)
-	GetDelayedTasksNumber() (task_number int, err error)
+
+	CountPendingTasks() (task_number int, err error)
+	CountDelayedTasks() (task_number int, err error)
+	GetPendingTasks(indexStart, indexEnd int) ([]*tasks.Signature, error)
+	GetDelayedTasks(indexStart, indexEnd int) ([]*tasks.Signature, error)
 }
 
 // TaskProcessor - can process a delivered task

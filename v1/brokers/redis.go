@@ -20,6 +20,14 @@ const (
 	redisDelayedTaskDetailSuffix = "_detail"
 )
 
+func WithDelaySuffix(queue string) string {
+	return queue + redisDelayedQueueSuffix
+}
+
+func WithDetailSuffix(queue string) string {
+	return queue + redisDelayedTaskDetailSuffix
+}
+
 // RedisBroker represents a Redis broker
 type RedisBroker struct {
 	host              string
@@ -109,7 +117,7 @@ func (b *RedisBroker) StartConsuming(consumerTag string, concurrency int, taskPr
 			case <-b.stopDelayedChan:
 				return
 			default:
-				delayedTask, err := b.nextDelayedTask(b.cnf.DefaultQueue + redisDelayedQueueSuffix)
+				delayedTask, err := b.nextDelayedTask(WithDelaySuffix(b.cnf.DefaultQueue))
 				if err != nil {
 					continue
 				}
@@ -168,8 +176,9 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 			score := signature.ETA.UnixNano()
 			//_, err = conn.Do("ZADD", b.cnf.DefaultQueue+redisDelayedQueueSuffix, score, msg)
 
-			conn.Send("SET", signature.UUID+redisDelayedTaskDetailSuffix, msg)
-			conn.Send("ZADD", b.cnf.DefaultQueue+redisDelayedQueueSuffix, score, signature.UUID)
+			conn.Send("SET", WithDetailSuffix(signature.UUID), msg)
+			//conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), signature.UUID, msg)
+			conn.Send("ZADD", WithDelaySuffix(b.cnf.DefaultQueue), score, signature.UUID)
 			conn.Flush()
 			if _, err = conn.Receive(); err != nil {
 				return err
@@ -193,14 +202,15 @@ func (b *RedisBroker) SaveRecord(recordType RecordType, signare *tasks.Signature
 }
 
 // GetPendingTasks returns a slice of task signatures waiting in the queue
-func (b *RedisBroker) GetPendingTasks(queue string) ([]*tasks.Signature, error) {
+func (b *RedisBroker) GetPendingTasks(indexStart, indexEnd int) ([]*tasks.Signature, error) {
 	conn := b.open()
 	defer conn.Close()
 
-	if queue == "" {
-		queue = b.cnf.DefaultQueue
+	if indexStart < 0 || indexEnd < indexStart {
+		indexStart = 0
+		indexEnd = 10
 	}
-	bytes, err := conn.Do("LRANGE", queue, 0, 10)
+	bytes, err := conn.Do("LRANGE", b.cnf.DefaultQueue, 0, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -213,6 +223,43 @@ func (b *RedisBroker) GetPendingTasks(queue string) ([]*tasks.Signature, error) 
 	for i, result := range results {
 		sig := new(tasks.Signature)
 		if err := json.Unmarshal(result, sig); err != nil {
+			return nil, err
+		}
+		taskSignatures[i] = sig
+	}
+	return taskSignatures, nil
+}
+
+func (b *RedisBroker) GetDelayedTasks(indexStart, indexEnd int) ([]*tasks.Signature, error) {
+	conn := b.open()
+	defer conn.Close()
+
+	if indexStart < 0 || indexEnd < indexStart {
+		indexStart = 0
+		indexEnd = 10
+	}
+	bytes, err := conn.Do("ZRANGE", WithDelaySuffix(b.cnf.DefaultQueue), 0, 10)
+	if err != nil {
+		return nil, err
+	}
+	results, err := redis.ByteSlices(bytes, err)
+	if err != nil {
+		return nil, err
+	}
+
+	taskSignatures := make([]*tasks.Signature, len(results))
+	for i, result := range results {
+		sig := new(tasks.Signature)
+		bytes, err = conn.Do("GET", WithDetailSuffix(string(result)))
+		//bytes, err = conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), string(result))
+		if err != nil {
+			return nil, err
+		}
+		detail, err := redis.Bytes(bytes, err)
+		if err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal(detail, sig); err != nil {
 			return nil, err
 		}
 		taskSignatures[i] = sig
@@ -351,7 +398,8 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 			return
 		}
 
-		if msg_delay, err = conn.Do("GET", string(items[0])+redisDelayedTaskDetailSuffix); err != nil {
+		if msg_delay, err = conn.Do("GET", WithDetailSuffix(string(items[0]))); err != nil {
+		//if msg_delay, err = conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), string(items[0])); err != nil {
 			return
 		}
 		if msg_delay == nil {
@@ -368,7 +416,8 @@ func (b *RedisBroker) nextDelayedTask(key string) (result []byte, err error) {
 
 		conn.Send("MULTI")
 		conn.Send("ZREM", key, items[0])
-		conn.Send("DEL", string(items[0])+redisDelayedTaskDetailSuffix)
+		conn.Send("DEL", WithDetailSuffix(string(items[0])))
+		//conn.Send("HDEL", WithDetailSuffix(b.cnf.DefaultQueue), string(items[0]))
 		if reply, err = conn.Do("EXEC"); err != nil {
 			return
 		}
@@ -443,7 +492,8 @@ func (b *RedisBroker) TransferDelayTasks(newQueueName string) (errRet error) {
 			}
 			log.INFO.Printf("[%d] %+v", i, sig)
 			score := sig.ETA.UnixNano()
-			if err = conn.Send("SET", sig.UUID+redisDelayedTaskDetailSuffix, results[i]); err != nil {
+			if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
+			//if err = conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), sig.UUID, results[i]); err != nil {
 				return err
 			}
 			if err = conn.Send("ZADD", newQueueName, score, sig.UUID); err != nil {
@@ -468,18 +518,27 @@ func (b *RedisBroker) GetConn() (conn redis.Conn) {
 	return
 }
 
-func (b *RedisBroker) GetDelayedTasksNumber() (task_number int, err error) {
+func (b *RedisBroker) CountDelayedTasks() (int, error) {
 	conn := b.open()
 	defer conn.Close()
 
-	var reply interface{}
-	if reply, err = conn.Do("ZCARD", b.cnf.DefaultQueue+redisDelayedQueueSuffix); err != nil {
-		return
+	reply, err := conn.Do("ZCARD", WithDelaySuffix(b.cnf.DefaultQueue));
+	if err != nil {
+		return 0,err
 	}
 
-	if task_number, err = redis.Int(reply, err); err != nil {
-		return
+	return redis.Int(reply, err)
+}
+
+
+func (b *RedisBroker) CountPendingTasks() (int, error) {
+	conn := b.open()
+	defer conn.Close()
+
+	reply, err := conn.Do("LLEN", b.cnf.DefaultQueue);
+	if err != nil {
+		return 0,err
 	}
 
-	return
+	return redis.Int(reply, err)
 }

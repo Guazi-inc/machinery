@@ -13,6 +13,10 @@ import (
 	"gopkg.in/redsync.v1"
 )
 
+func withResultSuffix(queue string) string {
+	return queue + "_result"
+}
+
 // RedisBackend represents a Memcache result backend
 type RedisBackend struct {
 	Backend
