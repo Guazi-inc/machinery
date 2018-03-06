@@ -491,10 +491,10 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string) (errRet error) {
 			log.INFO.Printf("[%d] %+v", i, sig)
 			score := sig.ETA.UnixNano()
 			//if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
-			if err = conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), sig.UUID, results[i]); err != nil {
+			if err = conn.Send("HSET", WithDetailSuffix(newQueue), sig.UUID, results[i]); err != nil {
 				return err
 			}
-			if err = conn.Send("ZADD", newQueue, score, sig.UUID); err != nil {
+			if err = conn.Send("ZADD", WithDelaySuffix(newQueue), score, sig.UUID); err != nil {
 				return err
 			}
 		}
