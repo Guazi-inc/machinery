@@ -535,7 +535,7 @@ func (b *RedisBroker) TransferTask(queue, newQueue string) (errRet error) {
 
 		// https://redis.io/commands/zrangebyscore
 		results, err := redis.ByteSlices(conn.Do(
-			"LRANGE", queue, 0, "+inf",
+			"LRANGE", queue, 0, -1,
 		))
 		if err != nil {
 			return err
@@ -565,7 +565,6 @@ func (b *RedisBroker) TransferTask(queue, newQueue string) (errRet error) {
 	return nil
 }
 
-
 //get connection to redis for unit test
 func (b *RedisBroker) GetConn() (conn redis.Conn) {
 	conn = b.open()
@@ -576,22 +575,21 @@ func (b *RedisBroker) CountDelayedTasks() (int, error) {
 	conn := b.open()
 	defer conn.Close()
 
-	reply, err := conn.Do("ZCARD", WithDelaySuffix(b.cnf.DefaultQueue));
+	reply, err := conn.Do("ZCARD", WithDelaySuffix(b.cnf.DefaultQueue))
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
 
 	return redis.Int(reply, err)
 }
 
-
 func (b *RedisBroker) CountPendingTasks() (int, error) {
 	conn := b.open()
 	defer conn.Close()
 
-	reply, err := conn.Do("LLEN", b.cnf.DefaultQueue);
+	reply, err := conn.Do("LLEN", b.cnf.DefaultQueue)
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
 
 	return redis.Int(reply, err)
