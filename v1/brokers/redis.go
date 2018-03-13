@@ -493,7 +493,7 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string, start, end int) 
 			if err := json.Unmarshal(results[i], sig); err != nil {
 				return err
 			}
-			log.INFO.Printf("[%d] %+v", i, sig)
+			//log.INFO.Printf("[%d] %+v", i, sig)
 			score := sig.ETA.UnixNano()
 			//if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
 			if err = conn.Send("HSET", WithDetailSuffix(newQueue), sig.UUID, results[i]); err != nil {
@@ -558,7 +558,7 @@ func (b *RedisBroker) TransferTask(queue, newQueue string, start, end int) (errR
 			if err := json.Unmarshal(results[i], sig); err != nil {
 				return err
 			}
-			log.INFO.Printf("[%d] %+v", i, sig)
+			//log.INFO.Printf("[%d] %+v", i, sig)
 			if err = conn.Send("RPUSH", newQueue, results[i]); err != nil {
 				return err
 			}
