@@ -498,7 +498,7 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string, start, end int) 
 	if err != nil {
 		return err
 	}
-	log.INFO.Printf("[TransferDelayTasks] %d results, reply: %+v", len(results), reply)
+	log.INFO.Printf("[TransferDelayTasks] %d results, reply is nil: %t", len(results), reply == nil)
 
 	return nil
 }
@@ -546,7 +546,7 @@ func (b *RedisBroker) TransferTask(queue, newQueue string, start, end int) (errR
 	if err != nil {
 		return err
 	}
-	log.INFO.Printf("[TransferTasks] %d results, reply: %+v", len(results), reply)
+	log.INFO.Printf("[TransferTasks] %d results, reply is nil: %t", len(results), reply == nil)
 
 	return nil
 }
