@@ -469,49 +469,37 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string, start, end int) 
 		conn.Close()
 	}()
 
-	for {
-		// Space out queries to ZSET to 20ms intervals so we don't bombard redis
-		// server with relentless ZRANGEBYSCOREs
-		<-time.After(20 * time.Millisecond)
+	// https://redis.io/commands/zrangebyscore
+	results, err := redis.ByteSlices(conn.Do(
+		"ZRANGE", queue, start, end,
+	))
+	if err != nil {
+		return err
+	}
 
-		if _, err := conn.Do("WATCH", queue); err != nil {
+	conn.Send("MULTI")
+	for i := range results {
+		sig := new(tasks.Signature)
+		if err := json.Unmarshal(results[i], sig); err != nil {
 			return err
 		}
-
-		// https://redis.io/commands/zrangebyscore
-		results, err := redis.ByteSlices(conn.Do(
-			"ZRANGE", queue, start, end,
-		))
-		if err != nil {
+		//log.INFO.Printf("[%d] %+v", i, sig)
+		score := sig.ETA.UnixNano()
+		//if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
+		if err = conn.Send("HSET", WithDetailSuffix(newQueue), sig.UUID, results[i]); err != nil {
 			return err
 		}
-
-		conn.Send("MULTI")
-		for i := range results {
-			sig := new(tasks.Signature)
-			if err := json.Unmarshal(results[i], sig); err != nil {
-				return err
-			}
-			//log.INFO.Printf("[%d] %+v", i, sig)
-			score := sig.ETA.UnixNano()
-			//if err = conn.Send("SET", WithDetailSuffix(sig.UUID), results[i]); err != nil {
-			if err = conn.Send("HSET", WithDetailSuffix(newQueue), sig.UUID, results[i]); err != nil {
-				return err
-			}
-			if err = conn.Send("ZADD", WithDelaySuffix(newQueue), score, sig.UUID); err != nil {
-				return err
-			}
-		}
-
-		reply, err := conn.Do("EXEC")
-		if err != nil {
+		if err = conn.Send("ZADD", WithDelaySuffix(newQueue), score, sig.UUID); err != nil {
 			return err
-		}
-		if reply != nil {
-			log.INFO.Printf("[TransferDelayTasks] %d results", len(results))
-			break
 		}
 	}
+
+	reply, err := conn.Do("EXEC")
+	if err != nil {
+		return err
+	}
+	log.INFO.Printf("[TransferDelayTasks] %d results, reply: %+v", len(results), reply)
+
 	return nil
 }
 
@@ -534,44 +522,32 @@ func (b *RedisBroker) TransferTask(queue, newQueue string, start, end int) (errR
 		conn.Close()
 	}()
 
-	for {
-		// Space out queries to ZSET to 20ms intervals so we don't bombard redis
-		// server with relentless ZRANGEBYSCOREs
-		<-time.After(20 * time.Millisecond)
+	// https://redis.io/commands/zrangebyscore
+	results, err := redis.ByteSlices(conn.Do(
+		"LRANGE", queue, start, end,
+	))
+	if err != nil {
+		return err
+	}
 
-		if _, err := conn.Do("WATCH", queue); err != nil {
+	conn.Send("MULTI")
+	for i := range results {
+		sig := new(tasks.Signature)
+		if err := json.Unmarshal(results[i], sig); err != nil {
 			return err
 		}
-
-		// https://redis.io/commands/zrangebyscore
-		results, err := redis.ByteSlices(conn.Do(
-			"LRANGE", queue, start, end,
-		))
-		if err != nil {
+		//log.INFO.Printf("[%d] %+v", i, sig)
+		if err = conn.Send("RPUSH", newQueue, results[i]); err != nil {
 			return err
-		}
-
-		conn.Send("MULTI")
-		for i := range results {
-			sig := new(tasks.Signature)
-			if err := json.Unmarshal(results[i], sig); err != nil {
-				return err
-			}
-			//log.INFO.Printf("[%d] %+v", i, sig)
-			if err = conn.Send("RPUSH", newQueue, results[i]); err != nil {
-				return err
-			}
-		}
-
-		reply, err := conn.Do("EXEC")
-		if err != nil {
-			return err
-		}
-		if reply != nil {
-			log.INFO.Printf("[TransferTasks] %d results", len(results))
-			break
 		}
 	}
+
+	reply, err := conn.Do("EXEC")
+	if err != nil {
+		return err
+	}
+	log.INFO.Printf("[TransferTasks] %d results, reply: %+v", len(results), reply)
+
 	return nil
 }
 
