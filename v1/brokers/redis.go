@@ -451,7 +451,12 @@ func (b *RedisBroker) open() redis.Conn {
 }
 
 //transfer delay tasks to suit updated code in which ETA of tasks can be modified
-func (b *RedisBroker) TransferDelayTask(queue, newQueue string) (errRet error) {
+func (b *RedisBroker) TransferDelayTask(queue, newQueue string, start, end int) (errRet error) {
+	if start == 0 && end == 0 {
+		end = -1
+	} else if start < 0 || end <= start {
+		return errors.New("invalid params")
+	}
 
 	conn := b.open()
 	defer func() {
@@ -475,7 +480,7 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string) (errRet error) {
 
 		// https://redis.io/commands/zrangebyscore
 		results, err := redis.ByteSlices(conn.Do(
-			"ZRANGEBYSCORE", queue, 0, "+inf",
+			"ZRANGE", queue, start, end,
 		))
 		if err != nil {
 			return err
@@ -511,7 +516,12 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string) (errRet error) {
 }
 
 //transfer delay tasks to suit updated code in which ETA of tasks can be modified
-func (b *RedisBroker) TransferTask(queue, newQueue string) (errRet error) {
+func (b *RedisBroker) TransferTask(queue, newQueue string, start, end int) (errRet error) {
+	if start == 0 && end == 0 {
+		end = -1
+	} else if start < 0 || end <= start {
+		return errors.New("invalid params")
+	}
 
 	conn := b.open()
 	defer func() {
@@ -535,7 +545,7 @@ func (b *RedisBroker) TransferTask(queue, newQueue string) (errRet error) {
 
 		// https://redis.io/commands/zrangebyscore
 		results, err := redis.ByteSlices(conn.Do(
-			"LRANGE", queue, 0, -1,
+			"LRANGE", queue, start, end,
 		))
 		if err != nil {
 			return err
