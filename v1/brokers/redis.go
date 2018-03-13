@@ -485,7 +485,6 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string, start, end int) 
 		if err != nil {
 			return err
 		}
-		log.INFO.Printf("[TransferDelayTasks] %d results", len(results))
 
 		conn.Send("MULTI")
 		for i := range results {
@@ -509,6 +508,7 @@ func (b *RedisBroker) TransferDelayTask(queue, newQueue string, start, end int) 
 			return err
 		}
 		if reply != nil {
+			log.INFO.Printf("[TransferDelayTasks] %d results", len(results))
 			break
 		}
 	}
@@ -550,7 +550,6 @@ func (b *RedisBroker) TransferTask(queue, newQueue string, start, end int) (errR
 		if err != nil {
 			return err
 		}
-		log.INFO.Printf("[TransferTasks] %d results", len(results))
 
 		conn.Send("MULTI")
 		for i := range results {
@@ -569,6 +568,7 @@ func (b *RedisBroker) TransferTask(queue, newQueue string, start, end int) (errR
 			return err
 		}
 		if reply != nil {
+			log.INFO.Printf("[TransferTasks] %d results", len(results))
 			break
 		}
 	}
