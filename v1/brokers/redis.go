@@ -196,7 +196,7 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 }
 
 func (b *RedisBroker) SaveRecord(recordType RecordType, signare *tasks.Signature) {
-	for _, f := range saveRecordFuncs {
+	for _, f := range taskLoggers {
 		f(b.cnf.DefaultQueue, recordType, signare)
 	}
 }

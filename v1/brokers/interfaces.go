@@ -10,14 +10,14 @@ const (
 	RecordTypeProcess RecordType = 1
 )
 
-var saveRecordFuncs []SaveRecordFunc
+var taskLoggers []taskLogger
 
 type RecordType int32
 
-type SaveRecordFunc func(queueName string, recordType RecordType, signare *tasks.Signature)
+type taskLogger func(queueName string, recordType RecordType, signare *tasks.Signature)
 
-func SetSaveRecordFunc(funcs ...SaveRecordFunc) {
-	saveRecordFuncs = append(saveRecordFuncs, funcs...)
+func SetTaskLogger(funcs ...taskLogger) {
+	taskLoggers = append(taskLoggers, funcs...)
 }
 
 // Interface - a common interface for all brokers
