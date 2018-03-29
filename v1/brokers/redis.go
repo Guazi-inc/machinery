@@ -169,20 +169,17 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 
 	// Check the ETA signature field, if it is set and it is in the future,
 	// delay the task
-	if signature.ETA != nil {
-		now := time.Now().UTC()
+	if signature.ETA != nil && signature.ETA.After(time.Now().UTC()) {
+		score := signature.ETA.UnixNano()
+		//_, err = conn.Do("ZADD", b.cnf.DefaultQueue+redisDelayedQueueSuffix, score, msg)
 
-		if signature.ETA.After(now) {
-			score := signature.ETA.UnixNano()
-			//_, err = conn.Do("ZADD", b.cnf.DefaultQueue+redisDelayedQueueSuffix, score, msg)
+		//conn.Send("SET", WithDetailSuffix(signature.UUID), msg)
 
-			//conn.Send("SET", WithDetailSuffix(signature.UUID), msg)
-			conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), signature.UUID, msg)
-			conn.Send("ZADD", WithDelaySuffix(b.cnf.DefaultQueue), score, signature.UUID)
-			conn.Flush()
-			if _, err = conn.Receive(); err != nil {
-				return err
-			}
+		conn.Send("HSET", WithDetailSuffix(b.cnf.DefaultQueue), signature.UUID, msg)
+		conn.Send("ZADD", WithDelaySuffix(b.cnf.DefaultQueue), score, signature.UUID)
+		conn.Flush()
+		if _, err = conn.Receive(); err != nil {
+			return err
 		}
 	} else {
 		if _, err = conn.Do("RPUSH", signature.RoutingKey, msg); err != nil {
@@ -196,9 +193,11 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 }
 
 func (b *RedisBroker) SaveRecord(recordType RecordType, signare *tasks.Signature) {
-	for _, f := range taskLoggers {
-		f(b.cnf.DefaultQueue, recordType, signare)
-	}
+	go func() {
+		for _, f := range taskLoggers {
+			f(b.cnf.DefaultQueue, recordType, signare)
+		}
+	}()
 }
 
 // GetPendingTasks returns a slice of task signatures waiting in the queue
