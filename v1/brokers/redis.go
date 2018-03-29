@@ -191,7 +191,6 @@ func (b *RedisBroker) Publish(signature *tasks.Signature) error {
 
 	}
 
-	log.INFO.Printf("Publish Message: %+v", signature)
 	b.SaveRecord(RecordTypePublish, signature)
 	return nil
 }

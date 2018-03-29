@@ -146,6 +146,7 @@ func (server *Server) SendTask(signature *tasks.Signature) (*backends.AsyncResul
 	if err := server.broker.Publish(signature); err != nil {
 		return nil, fmt.Errorf("Publish message error: %s", err)
 	}
+	log.INFO.Printf("Publish Message: %+v", signature)
 
 	return backends.NewAsyncResult(signature, server.backend), nil
 }
