@@ -209,7 +209,7 @@ func (b *RedisBroker) GetPendingTasks(indexStart, indexEnd int) ([]*tasks.Signat
 		indexStart = 0
 		indexEnd = 10
 	}
-	bytes, err := conn.Do("LRANGE", b.cnf.DefaultQueue, 0, 10)
+	bytes, err := conn.Do("LRANGE", b.cnf.DefaultQueue, indexStart, indexEnd)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func (b *RedisBroker) GetDelayedTasks(indexStart, indexEnd int) ([]*tasks.Signat
 		indexStart = 0
 		indexEnd = 10
 	}
-	bytes, err := conn.Do("ZRANGE", WithDelaySuffix(b.cnf.DefaultQueue), 0, 10)
+	bytes, err := conn.Do("ZRANGE", WithDelaySuffix(b.cnf.DefaultQueue), indexStart, indexEnd)
 	if err != nil {
 		return nil, err
 	}
