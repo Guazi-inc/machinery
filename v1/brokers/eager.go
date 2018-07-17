@@ -15,10 +15,10 @@ type EagerBroker struct {
 	Broker
 }
 
-//// NewEagerBroker creates new EagerBroker instance
-//func NewEagerBroker() Interface {
-//	return new(EagerBroker)
-//}
+// NewEagerBroker creates new EagerBroker instance
+func NewEagerBroker() Interface {
+	return new(EagerBroker)
+}
 
 // EagerMode interface with methods specific for this broker
 type EagerMode interface {
@@ -87,4 +87,9 @@ func (eagerBroker *EagerBroker) CountDelayedTasks() (int, error) {
 
 func (eagerBroker *EagerBroker) CountPendingTasks() (int, error) {
 	return 0, nil
+}
+
+//CancelDelayTask 取消延时任务
+func (b *EagerBroker) CancelDelayTask(uuid string) error {
+	return nil
 }
