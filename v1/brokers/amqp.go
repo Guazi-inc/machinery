@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Guazi-inc/machinery/v1/common"
-	"github.com/Guazi-inc/machinery/v1/config"
 	"github.com/Guazi-inc/machinery/v1/log"
 	"github.com/Guazi-inc/machinery/v1/tasks"
 	"github.com/garyburd/redigo/redis"
@@ -22,10 +21,10 @@ type AMQPBroker struct {
 	processingWG sync.WaitGroup // use wait group to make sure task processing completes on interrupt signal
 }
 
-// NewAMQPBroker creates new AMQPBroker instance
-func NewAMQPBroker(cnf *config.Config) Interface {
-	return &AMQPBroker{Broker: New(cnf), AMQPConnector: common.AMQPConnector{}}
-}
+//// NewAMQPBroker creates new AMQPBroker instance
+//func NewAMQPBroker(cnf *config.Config) Interface {
+//	return &AMQPBroker{Broker: New(cnf), AMQPConnector: common.AMQPConnector{}}
+//}
 
 // StartConsuming enters a loop and waits for incoming messages
 func (b *AMQPBroker) StartConsuming(consumerTag string, concurrency int, taskProcessor TaskProcessor) (bool, error) {
@@ -303,11 +302,11 @@ func (b *AMQPBroker) delay(signature *tasks.Signature, delayMs int64) error {
 	return nil
 }
 
-func (b *AMQPBroker) TransferDelayTasks(_, _ string) (error) {
+func (b *AMQPBroker) TransferDelayTasks(_, _ string) error {
 	return nil
 }
 
-func (b *AMQPBroker) GetConn() (redis.Conn) {
+func (b *AMQPBroker) GetConn() redis.Conn {
 	return nil
 }
 
@@ -320,10 +319,9 @@ func (b *AMQPBroker) CountPendingTasks() (int, error) {
 }
 
 func (b *AMQPBroker) GetDelayedTasks(_ int, _ int) ([]*tasks.Signature, error) {
-	return nil,nil
+	return nil, nil
 }
 
 func (b *AMQPBroker) GetPendingTasks(_ int, _ int) ([]*tasks.Signature, error) {
-	return nil,nil
+	return nil, nil
 }
-

@@ -579,3 +579,15 @@ func (b *RedisBroker) CountPendingTasks() (int, error) {
 
 	return redis.Int(reply, err)
 }
+
+//CancelDelayTask 取消延时任务
+func (b *RedisBroker) CancelDelayTask(uuid string) error {
+	conn := b.open()
+	defer conn.Close()
+
+	conn.Send("MULTI")
+	conn.Send("ZREM", WithDelaySuffix(b.cnf.DefaultQueue), uuid)
+	conn.Send("HDEL", WithDetailSuffix(b.cnf.DefaultQueue), uuid)
+	_, err := conn.Do("EXEC")
+	return err
+}

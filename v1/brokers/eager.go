@@ -15,10 +15,10 @@ type EagerBroker struct {
 	Broker
 }
 
-// NewEagerBroker creates new EagerBroker instance
-func NewEagerBroker() Interface {
-	return new(EagerBroker)
-}
+//// NewEagerBroker creates new EagerBroker instance
+//func NewEagerBroker() Interface {
+//	return new(EagerBroker)
+//}
 
 // EagerMode interface with methods specific for this broker
 type EagerMode interface {
@@ -73,18 +73,18 @@ func (eagerBroker *EagerBroker) GetDelayedTasks(_ int, _ int) ([]*tasks.Signatur
 	return nil, nil
 }
 
-func (eagerBroker *EagerBroker) TransferDelayTasks(_, _ string) (error){
+func (eagerBroker *EagerBroker) TransferDelayTasks(_, _ string) error {
 	return nil
 }
 
-func (eagerBroker *EagerBroker) GetConn()(redis.Conn){
+func (eagerBroker *EagerBroker) GetConn() redis.Conn {
 	return nil
 }
 
-func (eagerBroker *EagerBroker) CountDelayedTasks()(int, error){
+func (eagerBroker *EagerBroker) CountDelayedTasks() (int, error) {
 	return 0, nil
 }
 
-func (eagerBroker *EagerBroker) CountPendingTasks()(int, error){
+func (eagerBroker *EagerBroker) CountPendingTasks() (int, error) {
 	return 0, nil
 }

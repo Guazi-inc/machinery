@@ -28,6 +28,7 @@ type Interface interface {
 	StopConsuming()
 	Publish(task *tasks.Signature) error
 	GetConn() (conn redis.Conn)
+	CancelDelayTask(uuid string) error
 
 	CountPendingTasks() (task_number int, err error)
 	CountDelayedTasks() (task_number int, err error)
