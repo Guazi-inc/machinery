@@ -9,8 +9,9 @@ import (
 
 // Arg represents a single argument passed to invocation fo a task
 type Arg struct {
-	Type  string
-	Value interface{}
+	Type       string
+	Value      interface{}
+	ValueBytes []byte
 }
 
 // Headers represents the headers which should be used to direct the task

@@ -26,7 +26,7 @@ const (
 
 // Log level prefix map
 var prefix = map[level]string{
-	DEBUG:    "DEBUG: ",
+	DEBUG:   "DEBUG: ",
 	INFO:    "INFO: ",
 	WARNING: "WARNING: ",
 	ERROR:   "ERROR: ",
@@ -54,6 +54,7 @@ func New(out, errOut io.Writer, f Formatter) Logger {
 	}
 
 	l := make(map[level]LoggerInterface, 4)
+	l[DEBUG] = &Wrapper{lvl: DEBUG, formatter: f, logger: log.New(out, f.GetPrefix(DEBUG)+prefix[DEBUG], flag)}
 	l[INFO] = &Wrapper{lvl: INFO, formatter: f, logger: log.New(out, f.GetPrefix(INFO)+prefix[INFO], flag)}
 	l[WARNING] = &Wrapper{lvl: INFO, formatter: f, logger: log.New(out, f.GetPrefix(WARNING)+prefix[WARNING], flag)}
 	l[ERROR] = &Wrapper{lvl: INFO, formatter: f, logger: log.New(errOut, f.GetPrefix(ERROR)+prefix[ERROR], flag)}

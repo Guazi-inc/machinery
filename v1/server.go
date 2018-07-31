@@ -1,6 +1,7 @@
 package machinery
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sync"
@@ -136,6 +137,17 @@ func (server *Server) SendTask(signature *tasks.Signature) (*backends.AsyncResul
 	// Auto generate a UUID if not set already
 	if signature.UUID == "" {
 		signature.UUID = fmt.Sprintf("task_%v", uuid.NewV4())
+	}
+
+	for idx, arg := range signature.Args {
+		if _, ok := tasks.TypesMap[arg.Type]; !ok {
+			return nil, tasks.NewErrUnsupportedType(arg.Type)
+		}
+		bytes, err := json.Marshal(arg.Value)
+		if err != nil {
+			return nil, err
+		}
+		signature.Args[idx].ValueBytes = bytes
 	}
 
 	// Set initial task state to PENDING

@@ -115,7 +115,8 @@ func (t *Task) ReflectArgs(args []Arg) error {
 	argValues := make([]reflect.Value, len(args))
 
 	for i, arg := range args {
-		argValue, err := ReflectValue(arg.Type, arg.Value)
+		argValue, err := ReflectValueBytes(arg.Type, arg.ValueBytes)
+		//argValue, err := ReflectValue(arg.Type, arg.Value)
 		if err != nil {
 			return err
 		}

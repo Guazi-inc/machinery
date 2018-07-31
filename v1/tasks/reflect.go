@@ -2,13 +2,14 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 )
 
 var (
-	typesMap = map[string]reflect.Type{
+	TypesMap = map[string]reflect.Type{
 		"bool":    reflect.TypeOf(true),
 		"int":     reflect.TypeOf(int(1)),
 		"int8":    reflect.TypeOf(int8(1)),
@@ -49,7 +50,7 @@ func (e ErrUnsupportedType) Error() string {
 
 // ReflectValue converts interface{} to reflect.Value based on string type
 func ReflectValue(valueType string, value interface{}) (reflect.Value, error) {
-	theType, ok := typesMap[valueType]
+	theType, ok := TypesMap[valueType]
 	if !ok {
 		return reflect.Value{}, NewErrUnsupportedType(valueType)
 	}
@@ -113,13 +114,27 @@ func ReflectValue(valueType string, value interface{}) (reflect.Value, error) {
 	return reflect.Value{}, NewErrUnsupportedType(valueType)
 }
 
+// ReflectValueBytes unmarshal bytes to reflect.Value based on string type
+func ReflectValueBytes(valueType string, valueBytes []byte) (reflect.Value, error) {
+	theType, ok := TypesMap[valueType]
+	if !ok {
+		return reflect.Value{}, NewErrUnsupportedType(valueType)
+	}
+	theValue := reflect.New(theType)
+
+	if err := json.Unmarshal(valueBytes, theValue.Interface()); err != nil {
+		return reflect.Value{}, err
+	}
+	return theValue.Elem(), nil
+}
+
 func getIntValue(theType string, value interface{}) (int64, error) {
 	if strings.HasPrefix(fmt.Sprintf("%T", value), "float") {
 		// Any numbers from unmarshalled JSON will be float64 by default
 		// So we first need to do a type conversion to float64
 		n, ok := value.(float64)
 		if !ok {
-			return 0, typeConversionError(value, typesMap[theType].String())
+			return 0, typeConversionError(value, TypesMap[theType].String())
 		}
 
 		// Now we can cast the float64 to int64
@@ -128,7 +143,7 @@ func getIntValue(theType string, value interface{}) (int64, error) {
 
 	n, ok := value.(int64)
 	if !ok {
-		return 0, typeConversionError(value, typesMap[theType].String())
+		return 0, typeConversionError(value, TypesMap[theType].String())
 	}
 
 	return n, nil
@@ -140,7 +155,7 @@ func getUintValue(theType string, value interface{}) (uint64, error) {
 		// So we first need to do a type conversion to float64
 		n, ok := value.(float64)
 		if !ok {
-			return 0, typeConversionError(value, typesMap[theType].String())
+			return 0, typeConversionError(value, TypesMap[theType].String())
 		}
 
 		// Now we can cast the float64 to uint64
@@ -149,7 +164,7 @@ func getUintValue(theType string, value interface{}) (uint64, error) {
 
 	n, ok := value.(uint64)
 	if !ok {
-		return 0, typeConversionError(value, typesMap[theType].String())
+		return 0, typeConversionError(value, TypesMap[theType].String())
 	}
 
 	return n, nil
@@ -158,7 +173,7 @@ func getUintValue(theType string, value interface{}) (uint64, error) {
 func getFloatValue(theType string, value interface{}) (float64, error) {
 	n, ok := value.(float64)
 	if !ok {
-		return 0, typeConversionError(value, typesMap[theType].String())
+		return 0, typeConversionError(value, TypesMap[theType].String())
 	}
 
 	return n, nil
