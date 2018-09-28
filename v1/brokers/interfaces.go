@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	RecordTypePublish RecordType = 0
-	RecordTypeProcess RecordType = 1
+	RecordTypePublish RecordType = iota
+	RecordTypeProcess
+	RecordTypeCancel
 )
 
 var taskLoggers []taskLogger
