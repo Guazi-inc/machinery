@@ -590,6 +590,7 @@ func (b *RedisBroker) CancelDelayTask(uuid string) error {
 	conn.Send("HDEL", WithDetailSuffix(b.cnf.DefaultQueue), uuid)
 	_, err := conn.Do("EXEC")
 	if err == nil {
+		log.INFO.Printf("Cancel Task: uuid = %s", uuid)
 		b.SaveRecord(RecordTypeCancel, &tasks.Signature{
 			UUID: uuid,
 		})
