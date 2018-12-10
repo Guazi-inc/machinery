@@ -597,3 +597,28 @@ func (b *RedisBroker) CancelDelayTask(uuid string) error {
 	}
 	return err
 }
+
+//GetDelayTask _
+func (b *RedisBroker) GetDelayTask(uuid string) (*tasks.Signature, error) {
+	conn := b.open()
+	defer conn.Close()
+
+	_, err := conn.Do("ZSCORE", WithDelaySuffix(b.cnf.DefaultQueue), uuid)
+	if err == redis.ErrNil {
+		return nil, nil
+	} else if err != nil {
+		log.ERROR.Printf("get delay task score error: %v, uuid: %s", err, uuid)
+	}
+	reply, err := conn.Do("HGET", WithDetailSuffix(b.cnf.DefaultQueue), uuid)
+	if err == redis.ErrNil {
+		return nil, nil
+	} else if err != nil {
+		log.ERROR.Printf("get delay task detail error: %v, uuid: %s", err, uuid)
+	}
+	bytes, err := redis.Bytes(reply, nil)
+	if err != nil {
+		log.ERROR.Printf("parse delay task error: %v, uuid: %s", err, uuid)
+	}
+	var task tasks.Signature
+	return &task, json.Unmarshal(bytes, &task)
+}

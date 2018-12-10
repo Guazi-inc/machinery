@@ -327,7 +327,12 @@ func (b *AMQPBroker) GetPendingTasks(_ int, _ int) ([]*tasks.Signature, error) {
 	return nil, nil
 }
 
-//CancelDelayTask 取消延时任务
+//CancelDelayTask _
 func (b *AMQPBroker) CancelDelayTask(uuid string) error {
 	return nil
+}
+
+//GetDelayTask _
+func (b *AMQPBroker) GetDelayTask(uuid string) (*tasks.Signature, error) {
+	return nil, nil
 }

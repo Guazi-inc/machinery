@@ -11,7 +11,7 @@ import (
 	"github.com/Guazi-inc/machinery/v1/config"
 	"github.com/Guazi-inc/machinery/v1/log"
 	"github.com/Guazi-inc/machinery/v1/tasks"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Server is the main Machinery object and stores all configuration
@@ -267,4 +267,14 @@ func (server *Server) GetRegisteredTaskNames() []string {
 		i++
 	}
 	return taskNames
+}
+
+//CancelDelayTask _
+func (server *Server) CancelDelayTask(uuid string) error {
+	return server.broker.CancelDelayTask(uuid)
+}
+
+//GetDelayTask _
+func (server *Server) GetDelayTask(uuid string) (*tasks.Signature, error) {
+	return server.broker.GetDelayTask(uuid)
 }

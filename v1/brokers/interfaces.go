@@ -30,6 +30,7 @@ type Interface interface {
 	Publish(task *tasks.Signature) error
 	GetConn() (conn redis.Conn)
 	CancelDelayTask(uuid string) error
+	GetDelayTask(uuid string) (*tasks.Signature, error)
 
 	CountPendingTasks() (task_number int, err error)
 	CountDelayedTasks() (task_number int, err error)

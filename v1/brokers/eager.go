@@ -93,3 +93,8 @@ func (eagerBroker *EagerBroker) CountPendingTasks() (int, error) {
 func (b *EagerBroker) CancelDelayTask(uuid string) error {
 	return nil
 }
+
+//GetDelayTask _
+func (b *EagerBroker) GetDelayTask(uuid string) (*tasks.Signature, error) {
+	return nil, nil
+}
