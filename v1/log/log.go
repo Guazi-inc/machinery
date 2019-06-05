@@ -1,6 +1,8 @@
 package log
 
 import (
+	"fmt"
+
 	"github.com/RichardKnop/logging"
 )
 
@@ -26,4 +28,16 @@ func Set(l logging.LoggerInterface) {
 	WARNING = l
 	ERROR = l
 	FATAL = l
+}
+
+func ToString(in interface{}) string {
+	return fmt.Sprintf("%+v", in)
+}
+
+func Truncate(msg string) string {
+	msgBytes := []byte(msg)
+	if len(msgBytes) > 500 {
+		return string(msgBytes[:500]) + "..."
+	}
+	return msg
 }

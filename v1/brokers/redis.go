@@ -329,7 +329,7 @@ func (b *RedisBroker) consumeOne(delivery []byte, taskProcessor TaskProcessor) e
 		return nil
 	}
 
-	log.INFO.Printf("Received new message: %s", delivery)
+	log.INFO.Printf("Received new message: %s", log.Truncate(string(delivery)))
 
 	if err := taskProcessor.Process(sig); err != nil {
 		return err
